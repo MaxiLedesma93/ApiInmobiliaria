@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace ApiInmobiliaria.Models
 {
@@ -6,7 +7,7 @@ namespace ApiInmobiliaria.Models
 	{
 		[Key]
 		[Display(Name = "Código")]
-		public int IdInquilino { get; set; }
+		public int Id { get; set; }
 		[Required]
 		public string? Nombre { get; set; }
 		[Required]

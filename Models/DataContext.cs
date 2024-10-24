@@ -17,6 +17,7 @@ namespace ApiInmobiliaria.Models
         public DbSet<Inmueble> Inmuebles { get; set; }
         public DbSet<Pago> Pagos { get; set;  }
         public DbSet<Contrato> Contratos { get; set; }
-        //public DbSet<Usuario> Usuarios { get; set; }
+        public DbSet<Tipo> Tipos { get; set; }
+        public DbSet<Uso> Usos {get; set;}
     }
 }

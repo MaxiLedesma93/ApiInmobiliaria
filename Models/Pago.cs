@@ -1,5 +1,6 @@
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace ApiInmobiliaria.Models
 {
@@ -7,7 +8,7 @@ namespace ApiInmobiliaria.Models
     {
         [Key]
         [DisplayName("Código de Pago")]
-        public int IdPago { get; set; }
+        public int Id { get; set; }
 
         [DisplayName("Número de pago")]
         public int NumPago { get; set; }
@@ -24,11 +25,10 @@ namespace ApiInmobiliaria.Models
         public string? Detalle { get; set; }
 
         [DisplayName("Datos del Contrato")]
+        [ForeignKey(nameof(ContratoId))]
         public Contrato? contrato { get; set; }
 
-        public int Est {get; set;}
-
-        [DisplayName("Estado")]
-        public string? Activo {get; set;}
+         [DisplayName("Estado")]
+        bool Estado {get; set;}
     }
 }

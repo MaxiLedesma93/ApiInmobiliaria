@@ -8,13 +8,16 @@ namespace ApiInmobiliaria.Models{
    {
 		 [Key]
         [Display(Name = "Codigo")]
-        public int IdContrato { get; set; }
+        public int Id { get; set; }
 
+        
+        [ForeignKey(nameof(InmuebleId))]
         public Inmueble? Inmueble { get; set; }
 
         [Required, Display (Name ="Direccion")]
         public int InmuebleId { get; set; }
 
+        [ForeignKey (nameof(InquilinoId))]
         public Inquilino? Inquilino { get; set; }
 
         [Required, Display(Name ="Inquilino")]

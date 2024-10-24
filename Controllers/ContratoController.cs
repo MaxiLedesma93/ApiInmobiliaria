@@ -33,7 +33,7 @@ namespace ApiInmobiliaria.Controllers
                                     .Include(x => x.Inquilino)
                                     .Include(x => x.Inmueble)
                                     .Where(x => x.Inmueble.Duenio.Email == usuario)
-                                    .SingleOrDefaultAsync(x => x.IdContrato == id);
+                                    .SingleOrDefaultAsync(x => x.Id == id);
                 return contrato != null ? Ok(contrato) : NotFound();
             }
             catch (Exception ex)
@@ -51,7 +51,6 @@ namespace ApiInmobiliaria.Controllers
                 var lista = await contexto.Contratos
                                 .Include(x => x.Inquilino)
                                 .Include(x => x.Inmueble)
-                               // .Include(x=> x.Garante)
                                 .Where(x => x.Inmueble.Duenio.Email == usuario).ToListAsync();
                 return Ok(lista);
             }

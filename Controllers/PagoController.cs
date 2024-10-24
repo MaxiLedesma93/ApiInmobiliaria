@@ -9,7 +9,7 @@ using ApiInmobiliaria.Models;
 
 namespace ApiInmobiliaria.Controllers
 {
-    [Route("api/[controller]")]
+    [Route("[controller]")]
     [ApiController]
     public class PagosController : ControllerBase
     {
@@ -43,5 +43,5 @@ namespace ApiInmobiliaria.Controllers
             }
         }
 
-        }
+    }
 }

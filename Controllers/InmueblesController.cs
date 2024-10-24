@@ -8,9 +8,12 @@ using Microsoft.EntityFrameworkCore;
 using ApiInmobiliaria.Models;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
+using SixLabors.ImageSharp;
+using SixLabors.ImageSharp.Processing;
 using Microsoft.Extensions.Configuration;
 using System.IO;
 using Microsoft.AspNetCore.Hosting;
+using System.Text.Json.Serialization.Metadata;
 
 namespace ApiInmobiliaria.Controllers
 {
@@ -31,7 +34,7 @@ namespace ApiInmobiliaria.Controllers
         }
 
         // GET: api/Inmuebles/5
-        [HttpGet]
+        [HttpGet("listainmuebles")]
         //este metodo se usa en la vista Inmuebles.
         //Me devuelve una lista de todos los inmuebles del usuario actual
         public async Task<ActionResult<Inmueble>> GetListaInmuebles()
@@ -39,7 +42,10 @@ namespace ApiInmobiliaria.Controllers
             try
             {
                 var usuario = User.Identity.Name;
-                return Ok(contexto.Inmuebles.Include(e => e.Duenio).Where(e => e.Duenio.Email == usuario));
+                return Ok(contexto.Inmuebles
+                .Include(e => e.Duenio)
+				.Include(t => t.Tipo)
+				.Where(e => e.Duenio.Email == usuario));
             }
             catch (Exception ex)
             {
@@ -56,40 +62,72 @@ namespace ApiInmobiliaria.Controllers
             try
             {
                 var usuario = User.Identity.Name;
-                return Ok(contexto.Inmuebles.Include(e => e.Duenio).Where(e => e.Duenio.Email == usuario).Single(e => e.IdInmueble == id));
+                return Ok(contexto.Inmuebles.Include(e => e.Duenio).Where(e => e.Duenio.Email == usuario)
+                    .Single(e => e.Id == id));
             }
             catch (Exception ex)
             {
                 return BadRequest(ex.Message);
             }
         }
-        /*/
-        //Put api/Inmuebles/EditarEstado/5
-        //Para cambiar el estado entre disponible y no disponible
-     
-        [HttpPut("{id}")] 
-        public async Task<IActionResult> EditarEstado(int id)
+        //editar disponible.
+        [HttpPatch("{id}")]
+        public async Task<IActionResult>editardisponible(int id)
         {
             try
             {
                 var usuario = User.Identity.Name;
-                var i = contexto.Inmuebles.Include(x => x.Duenio)
-                    .FirstOrDefault(x => x.IdInmueble == id && x.Duenio.Email == usuario);
-                if (i != null) { 
-                    i.Disponible = !i.Disponible;
-                    contexto.Inmuebles.Update(i);
-                    await contexto.SaveChangesAsync();
-                    return Ok(i);
+                var inmueble = await contexto.Inmuebles.AsNoTracking().FirstOrDefaultAsync(x =>x.Id ==id);
+                if(ModelState.IsValid){
+                    if(inmueble.Disponible){
+                        inmueble.Disponible = false;
+                        contexto.Inmuebles.Update(inmueble);
+					    await contexto.SaveChangesAsync();
+                        return Ok(inmueble);
+
+                    }else{
+                         inmueble.Disponible = true;
+                        contexto.Inmuebles.Update(inmueble);
+					    await contexto.SaveChangesAsync();
+                        return Ok(inmueble);
+
+                    }
+                    
                 }
                 return BadRequest();
-
+                
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message.ToString());
+                return BadRequest(ex.Message);
             }
-        } /*/
+        }
+        // crear nuevo inmueble del propietario logueado.
+        [HttpPost]
+        public async Task<IActionResult> Post([FromForm] Inmueble inmueble){
+            try{
+                
+            inmueble.PropietarioId =  contexto.Propietarios.Single(x=>x.Email== User.Identity.Name).Id;
+            if(ModelState.IsValid){
+               
+                contexto.Inmuebles.Add(inmueble);
+                await contexto.SaveChangesAsync();
+                if(inmueble.imagen!=null){
+                    var imagePath = await guardarImagen(inmueble);
+                    inmueble.imgUrl = imagePath;
+                    await contexto.SaveChangesAsync();
+                }
+                
+                return CreatedAtAction(nameof(GetInmueblePorId), new { id = inmueble.Id }, inmueble);
+            }
+            else {
+                return BadRequest("Model State no es valido.");
+            }
+            }catch (Exception ex){
+                return BadRequest(ex.InnerException?.Message ?? ex.Message);
+            }
 
+        }
        //este metodo se usa en la vista Inquilinos
        //Me devuelve una lista con los inmuebles alquilados del usuario actual
         [HttpGet("InmueblesConContrato")]
@@ -102,7 +140,7 @@ namespace ApiInmobiliaria.Controllers
 
                 var query = from inmu in contexto.Inmuebles
                               join cont in contexto.Contratos
-                                on inmu.IdInmueble equals cont.InmuebleId
+                                on inmu.Id equals cont.InmuebleId
                             where cont.FecInicio <= fecha_actual && cont.FecFin >= fecha_actual && usuario == inmu.Duenio.Email
                             select cont;
              return Ok(query);
@@ -113,54 +151,39 @@ namespace ApiInmobiliaria.Controllers
             }
         }
 
-        // POST api/<controller>
-        //este metodo envia la foto del inmueble
-       /* [HttpPost]
-       public async Task<IActionResult> Post([FromBody] Inmueble entidad)
+    //funcion asincrona para guardar la imagen y modificarle tamaño.
+       public async Task<string> guardarImagen(Inmueble entidad)
         {
             try
             {
-                var direccion = entidad.Direccion;
-                var duenioId = User.Identity.Name;
-
-                if (entidad.Imagen.Length > 0)
+                string wwwPath = environment.WebRootPath;
+                string path = Path.Combine(wwwPath, "uploads/inmuebles");
+                if (!Directory.Exists(path))
                 {
-                    if (ModelState.IsValid)
-                    {
-                        entidad.Id = contexto.Propietarios.Single(e => e.Mail == User.Identity.Name).Id;
- 
-                        var stream1 = new MemoryStream(Convert.FromBase64String(entidad.Imagen));
-                        IFormFile ImagenInmo = new FormFile(stream1, 0, stream1.Length, "inmueble", ".jpg");
-                        string wwwPath = environment.WebRootPath;
-                        string path = Path.Combine(wwwPath, "Uploads");
-                        if (!Directory.Exists(path))
-                        {
-                            Directory.CreateDirectory(path);
-                        }
-                        Random r = new Random();
-                        //Path.GetFileName(u.AvatarFile.FileName);//este nombre se puede repetir
-                        string fileName = "foto_"+entidad.Id+Path.GetExtension(entidad.ImagenFile.FileName);
-                        string pathCompleto = Path.Combine(path, fileName);
-
-                        entidad.Imagen = Path.Combine("/Uploads", fileName);
-                        using (FileStream stream = new FileStream(pathCompleto, FileMode.Create))
-                        {
-                            entidad.ImagenFile.CopyTo(stream);
-                        }
-                        
-                        contexto.Inmuebles.Add(entidad);
-                        contexto.SaveChanges();
-                        return CreatedAtAction(nameof(GetInmueblePorId), new { id = entidad.Id }, entidad);
-
-                    }
-                    return BadRequest(ModelState);
+                    Directory.CreateDirectory(path);
                 }
-                return BadRequest(Ok("Imagen no encontrada"));
+                string fileName = "inmueble_" + entidad.Id + Path.GetExtension(entidad.imagen.FileName);
+                string pathCompleto = Path.Combine(path, fileName);
+                
+                // Esta operación guarda la foto en memoria en la ruta que necesitamos
+                using (FileStream stream = new FileStream(pathCompleto, FileMode.Create))
+                {
+                    await entidad.imagen.CopyToAsync(stream);
+                    stream.Dispose();
+                }
+                using (var image = Image.Load(pathCompleto))
+                {
+                    image.Mutate(x => x.Resize(500, 500));
+                    var resizedImagePath = Path.Combine(environment.WebRootPath, "uploads/inmuebles", Path.GetFileName(fileName));
+                    image.Save(resizedImagePath);
+                    return Path.Combine("uploads/inmuebles", Path.GetFileName(pathCompleto)).Replace("\\", "/");
+                }
+                   
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message.ToString());
+                return "Excepcion en cargar imagen";
             }
-        }*/
+        }
     }
 }
