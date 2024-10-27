@@ -85,27 +85,30 @@ namespace ApiInmobiliaria.Controllers
                 {
                     return BadRequest("Nombre de usuario o clave incorrecta");
                 }
-                else
-                {
-                    var key = new SymmetricSecurityKey(
-                        System.Text.Encoding.ASCII.GetBytes(config["TokenAuthentication:SecretKey"]));
-                    var credenciales = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
-                    var claims = new List<Claim>
+                else if(p.Clave == hashed)
                     {
-                        new Claim(ClaimTypes.Name, p.Email),
-                        new Claim("FullName", p.Nombre + " " + p.Apellido),
-                        new Claim(ClaimTypes.Role, "Propietario"),
-                    };
+                        var key = new SymmetricSecurityKey(
+                            System.Text.Encoding.ASCII.GetBytes(config["TokenAuthentication:SecretKey"]));
+                        var credenciales = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
+                        var claims = new List<Claim>
+                        {
+                            new Claim(ClaimTypes.Name, p.Email),
+                            new Claim("FullName", p.Nombre + " " + p.Apellido),
+                            new Claim(ClaimTypes.Role, "Propietario"),
+                        };
 
-                    var token = new JwtSecurityToken(
-                        issuer: config["TokenAuthentication:Issuer"],
-                        audience: config["TokenAuthentication:Audience"],
-                        claims: claims,
-                        expires: DateTime.Now.AddDays(360),
-                        signingCredentials: credenciales
-                    );
-                    return Ok(new JwtSecurityTokenHandler().WriteToken(token));
-                }
+                        var token = new JwtSecurityToken(
+                            issuer: config["TokenAuthentication:Issuer"],
+                            audience: config["TokenAuthentication:Audience"],
+                            claims: claims,
+                            expires: DateTime.Now.AddDays(360),
+                            signingCredentials: credenciales
+                        );
+                        return Ok(new JwtSecurityTokenHandler().WriteToken(token));
+                    }
+                    else{
+                        return BadRequest("Nombre de usuario o clave incorrecta");
+                    }
             }
             catch (Exception ex)
             {
