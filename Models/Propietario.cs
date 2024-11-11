@@ -22,6 +22,7 @@ public class Propietario
 
 		public string? AvatarUrl { get; set;}
 		
+		[EmailAddress]
 		public string? Email { get; set; }
 		[DataType(DataType.Password)]
 		public string? Clave { get; set; }

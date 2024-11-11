@@ -53,7 +53,7 @@ namespace ApiInmobiliaria.Controllers
             }
         }
 
-        // GET api/Inmuebles/5
+        // GET /Inmuebles/5
         //este metodo se usa en la vista detalle inmueble
         //y me devuelve los datos de un inmueble
         [HttpGet("{id}")]
@@ -108,6 +108,8 @@ namespace ApiInmobiliaria.Controllers
             try{
                 
             inmueble.PropietarioId =  contexto.Propietarios.Single(x=>x.Email== User.Identity.Name).Id;
+            inmueble.imgUrl="asd";
+            inmueble.Tipo = contexto.Tipos.Single(x=>x.Id == inmueble.TipoId);
             if(ModelState.IsValid){
                
                 contexto.Inmuebles.Add(inmueble);
@@ -116,6 +118,8 @@ namespace ApiInmobiliaria.Controllers
                     var imagePath = await guardarImagen(inmueble);
                     inmueble.imgUrl = imagePath;
                     await contexto.SaveChangesAsync();
+                    //seteo null la imagen para evitar un error de que llega un objeto cuando espera un array el retrofit.
+                    inmueble.imagen = null;
                 }
                 
                 return CreatedAtAction(nameof(GetInmueblePorId), new { id = inmueble.Id }, inmueble);

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -13,46 +13,38 @@ namespace ApiInmobiliaria.Controllers
 {
     [Route("[controller]")]
     [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
-    public class ContratosController : ControllerBase
+    public class TiposController : ControllerBase
     {
         private readonly DataContext contexto;
 
-        public ContratosController(DataContext context)
+        public TiposController(DataContext context)
         {
             contexto = context;
         }
 
-        // GET: api/Contratos
+        // GET: api/Tipos
         [HttpGet("{id}")]
-        public async Task<ActionResult<List<Pago>>> GetPagos(int id)
-        {
-
-            try
-            {
-                var pagos = await contexto.Pagos.Include(x => x.contrato).Where(x =>
-                     x.ContratoId == id
-                    ).ToListAsync();
-
-                return Ok(pagos);
-
-            }
-            catch (Exception ex)
-            {
-                return BadRequest(ex.Message.ToString());
-
-            }
-        }
-
-        [HttpGet]
-        public async Task<IActionResult> GetListaContratos()
+        public async Task<IActionResult> GetTipo(int id)
         {
             try
             {
                 var usuario = User.Identity.Name;
-                var lista = await contexto.Contratos
-                                .Include(x => x.Inquilino)
-                                .Include(x => x.Inmueble)
-                                .Where(x => x.Inmueble.Duenio.Email == usuario).ToListAsync();
+                var contrato = await contexto.Tipos.SingleOrDefaultAsync(x => x.Id == id);
+                return contrato != null ? Ok(contrato) : NotFound();
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex);
+            }
+        }
+
+        [HttpGet("listatipos")]
+        public async Task<IActionResult> GetListaTipos()
+        {
+            try
+            {
+                var usuario = User.Identity.Name;
+                var lista = await contexto.Tipos.ToListAsync();
                 return Ok(lista);
             }
             catch (Exception ex)

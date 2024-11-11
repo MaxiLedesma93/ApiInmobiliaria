@@ -41,8 +41,8 @@ builder.Services.AddAuthentication().AddJwtBearer(options =>//la api web valida 
 				var path = context.HttpContext.Request.Path;
 				if (!string.IsNullOrEmpty(accessToken) &&
 					(path.StartsWithSegments("/chatsegurohub") ||
-					path.StartsWithSegments("/api/propietarios/reset") ||
-					path.StartsWithSegments("/api/propietarios/token")))
+					path.StartsWithSegments("/propietarios/reset") ||
+					path.StartsWithSegments("/propietarios/token")))
 				{//reemplazar las urls por las necesarias ruta ⬆
 					context.Token = accessToken;
 				}

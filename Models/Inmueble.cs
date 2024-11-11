@@ -18,7 +18,7 @@ namespace ApiInmobiliaria.Models
 		public string? imgUrl {get; set;}
 		
 		[NotMapped]
-		public IFormFile imagen { get; set;}
+		public IFormFile? imagen { get; set;}
 		
 		public int? PropietarioId { get; set; }
 		
@@ -38,6 +38,17 @@ namespace ApiInmobiliaria.Models
 		
 		public Propietario? Duenio { get; set; }
 
+   
+   public override string ToString()
+		{
+			//return $"{Apellido}, {Nombre}";
+			//return $"{Nombre} {Apellido}";
+			var res = $"{Direccion} {Ambientes} {imgUrl} {Importe} {uso}" ;
+			if(Id!=0) {
+				res += $" ({Id})";
+			}
+			return res;
+		}
    }
    
 }
