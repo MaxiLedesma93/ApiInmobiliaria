@@ -22,18 +22,27 @@ namespace ApiInmobiliaria.Controllers
             contexto = context;
         }
 
-        // GET: api/Contratos
+        // GET: /Contratos
         [HttpGet("{id}")]
-        public async Task<ActionResult<List<Pago>>> GetPagos(int id)
+        public async Task<ActionResult> GetPagos(int id)
         {
 
             try
             {
-                var pagos = await contexto.Pagos.Include(x => x.contrato).Where(x =>
-                     x.ContratoId == id
-                    ).ToListAsync();
-
-                return Ok(pagos);
+                 try
+            {
+                var usuario = User.Identity.Name;
+                var contrato = await contexto.Contratos
+                                    .Include(x => x.Inquilino)
+                                    .Include(x => x.Inmueble)
+                                    .Where(x => x.Inmueble.Duenio.Email == usuario)
+                                    .SingleOrDefaultAsync(x => x.Id == id);
+                return contrato != null ? Ok(contrato) : NotFound();
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex);
+            }
 
             }
             catch (Exception ex)
