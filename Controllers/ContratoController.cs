@@ -24,7 +24,7 @@ namespace ApiInmobiliaria.Controllers
 
         // GET: /Contratos
         [HttpGet("{id}")]
-        public async Task<ActionResult> GetPagos(int id)
+        public async Task<ActionResult> GetContrato(int id)
         {
 
             try
